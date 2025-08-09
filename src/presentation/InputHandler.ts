@@ -1,12 +1,20 @@
 import { Vector2 } from '../core/Vector2.js';
 
 /**
- * Input handler for keyboard and mouse events
+ * Input handler for keyboard, mouse, and touch events
  */
 export class InputHandler {
   private keysPressed: Set<string> = new Set();
   private mousePosition: Vector2 = new Vector2();
   private canvas: HTMLCanvasElement;
+  
+  // Touch state
+  private isDragging: boolean = false;
+  private lastTouchPosition: Vector2 = new Vector2();
+  private dragStartPosition: Vector2 = new Vector2();
+  private touchStartTime: number = 0;
+  private readonly DRAG_THRESHOLD = 10; // pixels to start dragging
+  private readonly TAP_TIME_THRESHOLD = 200; // ms for tap vs drag
   
   // Callbacks
   public onMove: ((direction: Vector2) => void) | null = null;
@@ -54,6 +62,90 @@ export class InputHandler {
     this.canvas.addEventListener('contextmenu', (event) => {
       event.preventDefault();
     });
+
+    // Touch events for mobile
+    this.setupTouchEvents();
+  }
+
+  private setupTouchEvents(): void {
+    // Touch start
+    this.canvas.addEventListener('touchstart', (event) => {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      
+      this.lastTouchPosition = new Vector2(
+        touch.clientX - rect.left,
+        touch.clientY - rect.top
+      );
+      this.dragStartPosition = this.lastTouchPosition.copy();
+      this.touchStartTime = performance.now();
+      this.isDragging = false;
+    });
+
+    // Touch move
+    this.canvas.addEventListener('touchmove', (event) => {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      
+      const currentPosition = new Vector2(
+        touch.clientX - rect.left,
+        touch.clientY - rect.top
+      );
+
+      // Check if we should start dragging
+      const distanceFromStart = this.dragStartPosition.distanceTo(currentPosition);
+      if (!this.isDragging && distanceFromStart > this.DRAG_THRESHOLD) {
+        this.isDragging = true;
+      }
+
+      // Handle dragging for movement
+      if (this.isDragging) {
+        const dragDelta = currentPosition.subtract(this.lastTouchPosition);
+        
+        // Convert drag to discrete movement direction
+        if (dragDelta.magnitude() > 5) { // Threshold for movement
+          const normalizedDelta = dragDelta.normalize();
+          let direction = new Vector2(0, 0);
+          
+          // Convert to discrete directions
+          if (Math.abs(normalizedDelta.x) > Math.abs(normalizedDelta.y)) {
+            direction.x = normalizedDelta.x > 0 ? 1 : -1;
+          } else {
+            direction.y = normalizedDelta.y > 0 ? 1 : -1;
+          }
+          
+          if (this.onMove) {
+            this.onMove(direction);
+          }
+        }
+      }
+
+      this.lastTouchPosition = currentPosition;
+    });
+
+    // Touch end
+    this.canvas.addEventListener('touchend', (event) => {
+      event.preventDefault();
+      const touchDuration = performance.now() - this.touchStartTime;
+      
+      // If it was a quick tap (not a drag), use it for flashlight aiming
+      if (!this.isDragging && touchDuration < this.TAP_TIME_THRESHOLD) {
+        if (this.onMouseMove) {
+          this.onMouseMove(this.lastTouchPosition);
+        }
+      }
+      
+      this.isDragging = false;
+    });
+
+    // Prevent scrolling and zooming on touch
+    document.addEventListener('touchmove', (event) => {
+      if (event.target === this.canvas) {
+        event.preventDefault();
+      }
+    }, { passive: false });
   }
 
   /**

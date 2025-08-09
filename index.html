@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Dark Hall - Horror Maze Game</title>
     <style>
         body {
@@ -16,29 +16,44 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            touch-action: none; /* Prevent default touch behaviors */
         }
 
         h1 {
             margin: 10px 0;
             text-align: center;
             color: #ccc;
+            font-size: 1.5em;
         }
 
         #gameCanvas {
             border: 2px solid #333;
             background-color: #000;
             cursor: crosshair;
+            touch-action: none; /* Prevent scrolling/zooming */
+            max-width: 100vw;
+            max-height: 70vh;
         }
 
         .controls {
             margin: 20px 0;
             text-align: center;
             max-width: 800px;
+            padding: 0 10px;
         }
 
         .controls p {
             margin: 5px 0;
             color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .mobile-instructions {
+            display: none;
+            background-color: #111;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
 
         .debug {
@@ -53,10 +68,12 @@
             background-color: #333;
             color: #fff;
             border: 1px solid #555;
-            padding: 8px 16px;
-            margin: 0 5px;
+            padding: 12px 20px;
+            margin: 5px;
             cursor: pointer;
             border-radius: 4px;
+            font-size: 1em;
+            min-height: 44px; /* Touch-friendly size */
         }
 
         button:hover {
@@ -67,6 +84,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .mobile-instructions {
+                display: block;
+            }
+            
+            .desktop-instructions {
+                display: none;
+            }
+            
+            h1 {
+                font-size: 1.3em;
+            }
+            
+            .controls p {
+                font-size: 0.8em;
+            }
+            
+            button {
+                padding: 15px 25px;
+                margin: 8px;
+                font-size: 1.1em;
+            }
         }
     </style>
 </head>
@@ -76,12 +119,22 @@
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
         <div class="controls">
-            <p><strong>Controls:</strong></p>
-            <p>WASD or Arrow Keys - Move through the maze</p>
-            <p>Mouse - Aim your flashlight</p>
-            <p>G - Toggle God Mode (see all walls and enemies)</p>
-            <p><strong>Goal:</strong> Find the yellow prize room while avoiding the blue monster!</p>
-            <p><em>Watch for glowing red eyes in the darkness...</em></p>
+            <div class="mobile-instructions">
+                <p><strong>📱 Mobile Controls:</strong></p>
+                <p>Drag to move through the maze</p>
+                <p>Tap to aim your flashlight</p>
+                <p><strong>Goal:</strong> Find the yellow prize room while avoiding the blue monster!</p>
+                <p><em>Watch for glowing red eyes in the darkness...</em></p>
+            </div>
+            
+            <div class="desktop-instructions">
+                <p><strong>🖥️ Desktop Controls:</strong></p>
+                <p>WASD or Arrow Keys - Move through the maze</p>
+                <p>Mouse - Aim your flashlight</p>
+                <p>G - Toggle God Mode (see all walls and enemies)</p>
+                <p><strong>Goal:</strong> Find the yellow prize room while avoiding the blue monster!</p>
+                <p><em>Watch for glowing red eyes in the darkness...</em></p>
+            </div>
             
             <div style="margin-top: 15px;">
                 <button onclick="resetGame()">Reset Game</button>
