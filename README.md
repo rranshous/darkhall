@@ -6,7 +6,7 @@ A horror maze game built with TypeScript and HTML5 Canvas. Navigate through dark
 
 ## 🎮 Play the Game
 
-**[Play Dark Hall on itch.io →](https://your-username.itch.io/dark-hall)** *(Update with actual link)*
+**[Play Dark Hall on itch.io →](https://rranshous.itch.io/darkhall)**
 
 ## 🎯 Game Features
 
