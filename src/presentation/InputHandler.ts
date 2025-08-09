@@ -11,6 +11,7 @@ export class InputHandler {
   // Callbacks
   public onMove: ((direction: Vector2) => void) | null = null;
   public onMouseMove: ((position: Vector2) => void) | null = null;
+  public onGodModeToggle: (() => void) | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -20,6 +21,13 @@ export class InputHandler {
   private setupEventListeners(): void {
     // Keyboard events
     document.addEventListener('keydown', (event) => {
+      // Handle special key combinations
+      if (event.code === 'KeyG' && !this.keysPressed.has('KeyG')) {
+        if (this.onGodModeToggle) {
+          this.onGodModeToggle();
+        }
+      }
+      
       this.keysPressed.add(event.code);
       event.preventDefault();
     });

@@ -161,16 +161,25 @@ export class GameRenderer {
     
     this.ctx.fillText(statusText, 10, 30);
     
+    // God mode indicator
+    if (gameState.godMode) {
+      this.ctx.fillStyle = '#FFFF00';
+      this.ctx.font = '16px Arial';
+      this.ctx.fillText('GOD MODE (G to toggle)', 10, 55);
+    }
+    
     // Position info
+    this.ctx.fillStyle = '#FFFFFF';
     this.ctx.font = '14px Arial';
     this.ctx.fillText(
       `Position: (${gameState.playerPosition.x}, ${gameState.playerPosition.y})`,
       10,
-      this.canvas.height - 40
+      this.canvas.height - 60
     );
     
     // Controls
-    this.ctx.fillText('Use WASD to move, Mouse to aim flashlight', 10, this.canvas.height - 20);
+    this.ctx.fillText('WASD: Move | Mouse: Aim flashlight | G: God mode', 10, this.canvas.height - 40);
+    this.ctx.fillText('Find the yellow prize room to win!', 10, this.canvas.height - 20);
   }
 
   /**
@@ -189,14 +198,33 @@ export class GameRenderer {
   /**
    * Convert screen coordinates to world coordinates
    */
-  screenToWorld(screenPos: Vector2): Vector2 {
-    const rect = this.canvas.getBoundingClientRect();
-    const offsetX = (this.canvas.width - 21 * this.cellSize) / 2; // Hardcoded for now
-    const offsetY = (this.canvas.height - 21 * this.cellSize) / 2;
+  screenToWorld(screenPos: Vector2, mazeSize: { width: number, height: number }): Vector2 {
+    const offsetX = (this.canvas.width - mazeSize.width * this.cellSize) / 2;
+    const offsetY = (this.canvas.height - mazeSize.height * this.cellSize) / 2;
     
-    const worldX = (screenPos.x - rect.left - offsetX) / this.cellSize;
-    const worldY = (screenPos.y - rect.top - offsetY) / this.cellSize;
+    const worldX = (screenPos.x - offsetX) / this.cellSize;
+    const worldY = (screenPos.y - offsetY) / this.cellSize;
     
     return new Vector2(worldX, worldY);
+  }
+
+  /**
+   * Convert mouse position to flashlight direction relative to player
+   */
+  mouseToFlashlightDirection(mousePos: Vector2, playerPos: Vector2, mazeSize: { width: number, height: number }): Vector2 {
+    const offsetX = (this.canvas.width - mazeSize.width * this.cellSize) / 2;
+    const offsetY = (this.canvas.height - mazeSize.height * this.cellSize) / 2;
+    
+    // Convert player position to screen coordinates
+    const playerScreenX = playerPos.x * this.cellSize + this.cellSize / 2 + offsetX;
+    const playerScreenY = playerPos.y * this.cellSize + this.cellSize / 2 + offsetY;
+    
+    // Calculate direction from player to mouse
+    const direction = new Vector2(
+      mousePos.x - playerScreenX,
+      mousePos.y - playerScreenY
+    );
+    
+    return direction.normalize();
   }
 }

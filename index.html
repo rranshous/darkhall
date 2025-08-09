@@ -79,11 +79,13 @@
             <p><strong>Controls:</strong></p>
             <p>WASD or Arrow Keys - Move through the maze</p>
             <p>Mouse - Aim your flashlight</p>
+            <p>G - Toggle God Mode (see all walls and prize)</p>
             <p>Find the yellow prize room to win!</p>
             
             <div style="margin-top: 15px;">
                 <button onclick="resetGame()">Reset Game</button>
                 <button onclick="togglePause()">Pause/Resume</button>
+                <button onclick="toggleGodMode()">Toggle God Mode</button>
             </div>
         </div>
 
@@ -133,6 +135,12 @@
         function togglePause() {
             if (game) {
                 game.togglePause();
+            }
+        }
+
+        function toggleGodMode() {
+            if (game) {
+                game.simulation.toggleGodMode();
             }
         }
 

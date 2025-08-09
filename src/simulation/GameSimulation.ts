@@ -10,6 +10,7 @@ export class GameSimulation {
   public readonly maze: Maze;
   public readonly player: Player;
   public readonly stateMachine: StateMachine;
+  public godMode: boolean = false;
   
   private lastUpdateTime: number = 0;
 
@@ -106,16 +107,33 @@ export class GameSimulation {
   }
 
   /**
-   * Get all visible cells (illuminated by flashlight)
+   * Toggle god mode (see all walls and prize)
+   */
+  toggleGodMode(): void {
+    this.godMode = !this.godMode;
+    console.log(`God mode: ${this.godMode ? 'ON' : 'OFF'}`);
+  }
+
+  /**
+   * Get all visible cells (illuminated by flashlight or in god mode)
    */
   getVisibleCells(): Array<{ cell: any, intensity: number }> {
     const visibleCells: Array<{ cell: any, intensity: number }> = [];
     
-    // Check each cell in the maze
-    for (const cell of this.maze.getAllCells()) {
-      const intensity = this.player.getLightIntensity(cell.position);
-      if (intensity > 0) {
-        visibleCells.push({ cell, intensity });
+    // In god mode, show all cells with reduced intensity
+    if (this.godMode) {
+      for (const cell of this.maze.getAllCells()) {
+        const flashlightIntensity = this.player.getLightIntensity(cell.position);
+        const godModeIntensity = flashlightIntensity > 0 ? flashlightIntensity : 0.2; // Show everything dimly
+        visibleCells.push({ cell, intensity: godModeIntensity });
+      }
+    } else {
+      // Normal mode: only show illuminated cells
+      for (const cell of this.maze.getAllCells()) {
+        const intensity = this.player.getLightIntensity(cell.position);
+        if (intensity > 0) {
+          visibleCells.push({ cell, intensity });
+        }
       }
     }
     
@@ -131,7 +149,8 @@ export class GameSimulation {
       flashlightDirection: this.player.flashlightDirection.copy(),
       gameState: this.stateMachine.getCurrentState(),
       mazeSize: { width: this.maze.width, height: this.maze.height },
-      prizePosition: this.maze.prizePosition.copy()
+      prizePosition: this.maze.prizePosition.copy(),
+      godMode: this.godMode
     };
   }
 }
