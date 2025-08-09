@@ -7,7 +7,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "serve": "python3 -m http.server 8080",
-    "start": "npm run build && npm run serve"
+    "start": "npm run build && npm run serve",
+    "build:itch": "npm run build && npm run package:itch",
+    "package:itch": "mkdir -p build && cp index.html build/ && cp -r dist build/"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

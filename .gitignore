@@ -6,3 +6,7 @@ dist/
 *.swp
 *.swo
 *~
+
+# Build artifacts
+build/
+*.zip
