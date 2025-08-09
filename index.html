@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Hall - Horror Maze Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin: 10px 0;
+            text-align: center;
+            color: #ccc;
+        }
+
+        #gameCanvas {
+            border: 2px solid #333;
+            background-color: #000;
+            cursor: crosshair;
+        }
+
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+            max-width: 800px;
+        }
+
+        .controls p {
+            margin: 5px 0;
+            color: #aaa;
+        }
+
+        .debug {
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            text-align: left;
+        }
+
+        button {
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Dark Hall</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            <p><strong>Controls:</strong></p>
+            <p>WASD or Arrow Keys - Move through the maze</p>
+            <p>Mouse - Aim your flashlight</p>
+            <p>Find the yellow prize room to win!</p>
+            
+            <div style="margin-top: 15px;">
+                <button onclick="resetGame()">Reset Game</button>
+                <button onclick="togglePause()">Pause/Resume</button>
+            </div>
+        </div>
+
+        <div id="debug" class="debug" style="display: none;">
+            <h3>Debug Info:</h3>
+            <pre id="debugContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Global game instance
+        let game = null;
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', async () => {
+            try {
+                const canvas = document.getElementById('gameCanvas');
+                
+                // Import the game module
+                const { Game } = await import('./dist/Game.js');
+                
+                // Create and start the game
+                game = new Game(canvas);
+                game.start();
+                
+                console.log('Game loaded successfully!');
+                
+                // Enable debug mode with 'D' key
+                document.addEventListener('keydown', (event) => {
+                    if (event.code === 'KeyD' && event.ctrlKey) {
+                        toggleDebug();
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Failed to load game:', error);
+                document.body.innerHTML = '<h1>Failed to load game. Check console for errors.</h1>';
+            }
+        });
+
+        function resetGame() {
+            if (game) {
+                game.reset();
+            }
+        }
+
+        function togglePause() {
+            if (game) {
+                game.togglePause();
+            }
+        }
+
+        function toggleDebug() {
+            const debugDiv = document.getElementById('debug');
+            if (debugDiv.style.display === 'none') {
+                debugDiv.style.display = 'block';
+                startDebugLoop();
+            } else {
+                debugDiv.style.display = 'none';
+            }
+        }
+
+        function startDebugLoop() {
+            function updateDebug() {
+                const debugDiv = document.getElementById('debug');
+                if (debugDiv.style.display === 'block' && game) {
+                    const debugContent = document.getElementById('debugContent');
+                    debugContent.textContent = JSON.stringify(game.getDebugInfo(), null, 2);
+                    setTimeout(updateDebug, 100);
+                }
+            }
+            updateDebug();
+        }
+    </script>
+</body>
+</html>

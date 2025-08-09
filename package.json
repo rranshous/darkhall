@@ -1,0 +1,19 @@
+{
+  "name": "darkhall",
+  "version": "0.1.0",
+  "description": "A 2D top-down horror maze game",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "serve": "python3 -m http.server 8080",
+    "start": "npm run build && npm run serve"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "keywords": ["game", "horror", "maze", "typescript", "canvas"],
+  "author": "",
+  "license": "MIT"
+}
