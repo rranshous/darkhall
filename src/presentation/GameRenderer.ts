@@ -45,8 +45,11 @@ export class GameRenderer {
     // Render visible cells (those illuminated by flashlight)
     this.renderVisibleCells(simulation);
     
-    // Render monster (if visible)
+    // Render monster body (if visible)
     this.renderMonster(simulation);
+    
+    // Always render monster eyes on top (even in darkness)
+    this.renderMonsterEyes(simulation);
     
     // Render player
     this.renderPlayer(gameState.playerPosition, gameState.flashlightDirection);
@@ -136,17 +139,55 @@ export class GameRenderer {
   }
 
   /**
-   * Render the monster (if it's visible in the light or god mode)
+   * Always render the monster's glowing red eyes (even in complete darkness)
+   */
+  private renderMonsterEyes(simulation: GameSimulation): void {
+    const gameState = simulation.getGameState();
+    const monsterPos = gameState.monsterPosition;
+    
+    const x = monsterPos.x * this.cellSize + this.cellSize / 2;
+    const y = monsterPos.y * this.cellSize + this.cellSize / 2;
+    
+    // Always render the glowing red eyes, even in darkness
+    this.ctx.fillStyle = '#FF0000'; // Bright red, always visible
+    // Left eye
+    this.ctx.beginPath();
+    this.ctx.arc(x - this.cellSize / 8, y - this.cellSize / 8, 3, 0, Math.PI * 2);
+    this.ctx.fill();
+    // Right eye  
+    this.ctx.beginPath();
+    this.ctx.arc(x + this.cellSize / 8, y - this.cellSize / 8, 3, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    // Add a subtle glow effect around the eyes
+    this.ctx.shadowColor = '#FF0000';
+    this.ctx.shadowBlur = 8;
+    this.ctx.fillStyle = '#FF4444';
+    // Left eye glow
+    this.ctx.beginPath();
+    this.ctx.arc(x - this.cellSize / 8, y - this.cellSize / 8, 2, 0, Math.PI * 2);
+    this.ctx.fill();
+    // Right eye glow
+    this.ctx.beginPath();
+    this.ctx.arc(x + this.cellSize / 8, y - this.cellSize / 8, 2, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    // Reset shadow
+    this.ctx.shadowBlur = 0;
+  }
+
+  /**
+   * Render the monster body (only when illuminated or in god mode)
    */
   private renderMonster(simulation: GameSimulation): void {
     const gameState = simulation.getGameState();
     const monsterPos = gameState.monsterPosition;
     
-    // Check if monster is visible (in light or god mode)
+    // Check if monster body is visible (in light or god mode)
     const lightIntensity = simulation.player.getLightIntensity(monsterPos);
-    const isVisible = lightIntensity > 0.1 || gameState.godMode;
+    const isBodyVisible = lightIntensity > 0.1 || gameState.godMode;
     
-    if (!isVisible) return;
+    if (!isBodyVisible) return;
     
     const x = monsterPos.x * this.cellSize + this.cellSize / 2;
     const y = monsterPos.y * this.cellSize + this.cellSize / 2;
@@ -161,19 +202,6 @@ export class GameRenderer {
     this.ctx.beginPath();
     this.ctx.arc(x, y, this.cellSize / 2.5, 0, Math.PI * 2);
     this.ctx.fill();
-    
-    // Monster eyes (glowing red dots)
-    if (intensity > 0.3) {
-      this.ctx.fillStyle = `rgb(255, ${Math.floor(50 * intensity)}, 0)`;
-      // Left eye
-      this.ctx.beginPath();
-      this.ctx.arc(x - this.cellSize / 8, y - this.cellSize / 8, 2, 0, Math.PI * 2);
-      this.ctx.fill();
-      // Right eye  
-      this.ctx.beginPath();
-      this.ctx.arc(x + this.cellSize / 8, y - this.cellSize / 8, 2, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
   }
 
   /**
@@ -217,11 +245,15 @@ export class GameRenderer {
     const monsterPos = gameState.monsterPosition;
     const distanceToMonster = playerPos.distanceTo(monsterPos);
     
-    if (distanceToMonster <= 3 && gameState.gameState === GameState.EXPLORING) {
+    if (distanceToMonster <= 4 && gameState.gameState === GameState.EXPLORING) {
       this.ctx.fillStyle = '#FF4444';
       this.ctx.font = '16px Arial';
       const warningY = gameState.godMode ? 75 : 55;
-      this.ctx.fillText('⚠️ MONSTER NEARBY!', 10, warningY);
+      if (distanceToMonster <= 2) {
+        this.ctx.fillText('⚠️ MONSTER VERY CLOSE!', 10, warningY);
+      } else {
+        this.ctx.fillText('⚠️ MONSTER NEARBY!', 10, warningY);
+      }
     }
     
     // Position info
