@@ -10,8 +10,11 @@ A horror maze game built with TypeScript and HTML5 Canvas. Navigate through dark
 
 ## 🎯 Game Features
 
-- **🗿 Procedural Maze Generation**: Each playthrough features a unique maze layout
-- **💡 Line-of-Sight System**: Explore using only your flashlight beam
+- **🗿 Large Procedural Mazes**: Each playthrough features a unique 31x31 maze with multiple paths
+- **💡 Advanced Lighting System**: Triple-layer lighting with flashlight, ambient glow, and footprint trails
+- **👣 Footprint Navigation**: Leave fading light trails to track your exploration history
+- **🚫 Anti-Frustration Design**: Smart monster placement prevents guaranteed loss scenarios
+- **🎯 Line-of-Sight Rendering**: Light doesn't bleed through walls - realistic flashlight behavior
 - **👹 Intelligent Monster AI**: A blue monster with glowing red eyes hunts you through the darkness
 - **📱 Cross-Platform**: Works on desktop (WASD + mouse) and mobile (touch controls)
 - **🎮 God Mode**: Toggle full visibility for debugging and exploration
@@ -33,11 +36,13 @@ A horror maze game built with TypeScript and HTML5 Canvas. Navigate through dark
 
 Your goal is simple but terrifying: **find the yellow prize room** while **avoiding the blue monster**. 
 
-- You can only see what your flashlight illuminates
+- **Triple Lighting System**: Directional flashlight, ambient player glow, and fading footprint trails
+- **Footprint Navigation**: See where you've been with light trails that fade over 15 seconds
+- **Realistic Line-of-Sight**: Light is blocked by walls - no cheating through solid barriers
 - The monster's **glowing red eyes are always visible**, even in darkness
 - Your flashlight slows the monster when it's caught in the beam
-- The monster uses intelligent pathfinding to hunt you
-- Each maze is procedurally generated with guaranteed paths
+- **Fair Challenge**: Large mazes with multiple paths prevent unavoidable encounters
+- Each maze is procedurally generated with guaranteed escape routes
 
 ## 🛠️ Development
 
@@ -117,22 +122,25 @@ src/
 ## 🎨 Technical Details
 
 ### Maze Generation
-- Uses **recursive backtracking** algorithm
-- Guarantees connectivity between start and prize
-- **Pathfinding verification** ensures solvable mazes
-- Additional random connections for complexity
+- Uses **recursive backtracking** algorithm for base structure
+- **Strategic connections** added to ensure multiple paths and prevent choke points
+- **Smart monster placement** avoids blocking critical routes
+- **31x31 large mazes** provide ample exploration space
+- **Pathfinding verification** ensures fair, solvable challenges
+
+### Lighting System
+- **Directional Flashlight**: 4-unit range cone with realistic line-of-sight blocking
+- **Ambient Player Glow**: 1.5-unit radius for immediate spatial awareness
+- **Footprint Trails**: 15-second fading navigation aid with smooth cosine fade curve
+- **Two-tier Rendering**: Different intensity models for main lighting vs. fading effects
+- **Performance Optimized**: Efficient Map-based footprint storage with automatic cleanup
 
 ### Monster AI
-- **BFS pathfinding** to hunt the player
+- **BFS pathfinding** to hunt the player efficiently
 - **Fear of light** - slows down in flashlight beam
 - **Always-visible eyes** for atmospheric horror
-- **Smart positioning** - spawns far from player start
-
-### Rendering System
-- **Fog of war** - only illuminated areas are visible
-- **Light intensity falloff** with distance and angle
-- **Atmospheric effects** - glowing eyes, shadows
-- **Responsive design** for multiple screen sizes
+- **Safe spawn system** - won't start in positions that guarantee player loss
+- **Intersection preference** - spawns in open areas rather than narrow corridors
 
 ## 🤝 Contributing
 
