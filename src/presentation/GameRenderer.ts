@@ -210,16 +210,13 @@ export class GameRenderer {
   private renderUI(simulation: GameSimulation): void {
     const gameState = simulation.getGameState();
     
-    // Game state text
+    // Only show important game state messages (not the redundant exploring text)
     this.ctx.fillStyle = '#FFFFFF';
     this.ctx.font = '20px Arial';
     this.ctx.textAlign = 'left';
     
     let statusText = '';
     switch (gameState.gameState) {
-      case GameState.EXPLORING:
-        statusText = 'Exploring the dark halls... Beware the monster!';
-        break;
       case GameState.PAUSED:
         statusText = 'PAUSED';
         break;
@@ -229,9 +226,13 @@ export class GameRenderer {
       case GameState.GAME_OVER:
         statusText = 'GAME OVER - The monster caught you!';
         break;
+      // Remove the redundant "Exploring" message
     }
     
-    this.ctx.fillText(statusText, 10, 30);
+    // Only show status text for important states
+    if (statusText) {
+      this.ctx.fillText(statusText, 10, 30);
+    }
     
     // God mode indicator
     if (gameState.godMode) {
@@ -240,7 +241,7 @@ export class GameRenderer {
       this.ctx.fillText('GOD MODE (G to toggle)', 10, 55);
     }
     
-    // Monster proximity warning
+    // Monster proximity warning (keep this - it's useful!)
     const playerPos = gameState.playerPosition;
     const monsterPos = gameState.monsterPosition;
     const distanceToMonster = playerPos.distanceTo(monsterPos);
@@ -256,18 +257,7 @@ export class GameRenderer {
       }
     }
     
-    // Position info
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.font = '14px Arial';
-    this.ctx.fillText(
-      `Position: (${gameState.playerPosition.x}, ${gameState.playerPosition.y})`,
-      10,
-      this.canvas.height - 60
-    );
-    
-    // Controls
-    this.ctx.fillText('WASD: Move | Mouse: Aim flashlight | G: God mode', 10, this.canvas.height - 40);
-    this.ctx.fillText('Avoid the blue monster! Find the yellow prize room!', 10, this.canvas.height - 20);
+    // Remove position info, controls text, and game description - they're redundant and cluttering
   }
 
   /**
