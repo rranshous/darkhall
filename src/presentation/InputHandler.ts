@@ -16,14 +16,29 @@ export class InputHandler {
   private readonly DRAG_THRESHOLD = 10; // pixels to start dragging
   private readonly TAP_TIME_THRESHOLD = 200; // ms for tap vs drag
   
+  // Viewport info for coordinate conversion
+  private cellSize: number = 20;
+  private mazeSize: { width: number, height: number } = { width: 21, height: 21 };
+  private playerPosition: Vector2 = new Vector2(1, 1); // Track player position for flashlight direction
+  
   // Callbacks
   public onMove: ((direction: Vector2) => void) | null = null;
   public onMouseMove: ((position: Vector2) => void) | null = null;
+  public onFlashlightDirection: ((direction: Vector2) => void) | null = null;
   public onGodModeToggle: (() => void) | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.setupEventListeners();
+  }
+
+  /**
+   * Update viewport info for coordinate conversion
+   */
+  updateViewport(cellSize: number, mazeSize: { width: number, height: number }, playerPosition: Vector2): void {
+    this.cellSize = cellSize;
+    this.mazeSize = mazeSize;
+    this.playerPosition = playerPosition;
   }
 
   private setupEventListeners(): void {
@@ -55,6 +70,14 @@ export class InputHandler {
       
       if (this.onMouseMove) {
         this.onMouseMove(this.mousePosition);
+      }
+      
+      // Convert to flashlight direction if we have a callback
+      if (this.onFlashlightDirection) {
+        const direction = this.mouseToFlashlightDirection(this.mousePosition);
+        if (direction.magnitude() > 0) {
+          this.onFlashlightDirection(direction);
+        }
       }
     });
 
@@ -135,6 +158,14 @@ export class InputHandler {
         if (this.onMouseMove) {
           this.onMouseMove(this.lastTouchPosition);
         }
+        
+        // Convert to flashlight direction if we have a callback
+        if (this.onFlashlightDirection) {
+          const direction = this.mouseToFlashlightDirection(this.lastTouchPosition);
+          if (direction.magnitude() > 0) {
+            this.onFlashlightDirection(direction);
+          }
+        }
       }
       
       this.isDragging = false;
@@ -190,6 +221,27 @@ export class InputHandler {
    */
   getMousePosition(): Vector2 {
     return this.mousePosition.copy();
+  }
+
+  /**
+   * Convert mouse position to flashlight direction relative to player
+   */
+  private mouseToFlashlightDirection(mousePos: Vector2): Vector2 {
+    // Calculate offset to center the maze on screen (same logic as renderer)
+    const offsetX = (this.canvas.width - this.mazeSize.width * this.cellSize) / 2;
+    const offsetY = (this.canvas.height - this.mazeSize.height * this.cellSize) / 2;
+    
+    // Convert player position to screen coordinates
+    const playerScreenX = this.playerPosition.x * this.cellSize + this.cellSize / 2 + offsetX;
+    const playerScreenY = this.playerPosition.y * this.cellSize + this.cellSize / 2 + offsetY;
+    
+    // Calculate direction from player to mouse
+    const direction = new Vector2(
+      mousePos.x - playerScreenX,
+      mousePos.y - playerScreenY
+    );
+    
+    return direction.normalize();
   }
 
   /**

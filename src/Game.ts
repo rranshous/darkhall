@@ -39,19 +39,9 @@ export class Game {
       }
     };
 
-    // Mouse input for flashlight direction
-    this.inputHandler.onMouseMove = (mousePos: Vector2) => {
-      const gameState = this.simulation.getGameState();
-      const direction = this.renderer.mouseToFlashlightDirection(
-        mousePos, 
-        gameState.playerPosition, 
-        gameState.mazeSize
-      );
-      
-      // Only update if the direction is valid
-      if (direction.magnitude() > 0) {
-        this.simulation.setFlashlightDirection(direction);
-      }
+    // Flashlight direction input - now handled directly by InputHandler
+    this.inputHandler.onFlashlightDirection = (direction: Vector2) => {
+      this.simulation.setFlashlightDirection(direction);
     };
 
     // God mode toggle
@@ -103,6 +93,11 @@ export class Game {
     // Update systems
     this.inputHandler.update();
     this.simulation.update(deltaTime);
+    
+    // Update input handler with current viewport info for coordinate conversion
+    const gameState = this.simulation.getGameState();
+    this.inputHandler.updateViewport(20, gameState.mazeSize, gameState.playerPosition);
+    
     this.renderer.render(this.simulation);
 
     // Continue the loop

@@ -295,24 +295,4 @@ export class GameRenderer {
     
     return new Vector2(worldX, worldY);
   }
-
-  /**
-   * Convert mouse position to flashlight direction relative to player
-   */
-  mouseToFlashlightDirection(mousePos: Vector2, playerPos: Vector2, mazeSize: { width: number, height: number }): Vector2 {
-    const offsetX = (this.canvas.width - mazeSize.width * this.cellSize) / 2;
-    const offsetY = (this.canvas.height - mazeSize.height * this.cellSize) / 2;
-    
-    // Convert player position to screen coordinates
-    const playerScreenX = playerPos.x * this.cellSize + this.cellSize / 2 + offsetX;
-    const playerScreenY = playerPos.y * this.cellSize + this.cellSize / 2 + offsetY;
-    
-    // Calculate direction from player to mouse
-    const direction = new Vector2(
-      mousePos.x - playerScreenX,
-      mousePos.y - playerScreenY
-    );
-    
-    return direction.normalize();
-  }
 }
