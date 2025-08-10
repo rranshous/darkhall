@@ -269,8 +269,17 @@ export class GameRenderer {
     const baseG = parseInt(hex.substr(2, 2), 16);
     const baseB = parseInt(hex.substr(4, 2), 16);
     
-    // Improved lighting model: ensures minimum visibility and better contrast
-    const minBrightness = 0.15; // Minimum visibility even at lowest intensity
+    // For very low intensities (footprints), allow true fading to zero
+    if (intensity < 0.2) {
+      // Direct intensity application for smooth fading
+      const r = Math.floor(baseR * intensity);
+      const g = Math.floor(baseG * intensity);
+      const b = Math.floor(baseB * intensity);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    
+    // For normal lighting (flashlight, ambient), use enhanced model
+    const minBrightness = 0.15; // Minimum visibility for main light sources
     const maxBrightness = 0.9;   // Maximum brightness to preserve atmosphere
     
     // Scale intensity to a more useful range

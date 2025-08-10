@@ -11,6 +11,11 @@ export class Player {
   public flashlightRange: number;
   public flashlightAngle: number; // Cone angle in radians
   private maze: Maze | null = null; // Reference to maze for line-of-sight
+  
+  // Footprint tracking for navigation aid
+  private footprints: Map<string, { position: Vector2, timestamp: number, intensity: number }> = new Map();
+  private readonly FOOTPRINT_FADE_TIME = 15000; // Reduced from 30s to 15s - fade faster
+  private readonly FOOTPRINT_MAX_INTENSITY = 0.12; // Slightly dimmer starting intensity
 
   constructor(startPosition: Vector2) {
     this.position = startPosition.copy();
@@ -18,6 +23,9 @@ export class Player {
     this.flashlightDirection = this.facing.copy();
     this.flashlightRange = 4; // How far the flashlight reaches
     this.flashlightAngle = Math.PI / 3; // 60 degrees cone
+    
+    // Add initial footprint at starting position
+    this.addFootprint(startPosition);
   }
 
   /**
@@ -36,6 +44,53 @@ export class Player {
     // Update facing direction if moving
     if (delta.magnitude() > 0) {
       this.facing = delta.normalize();
+    }
+    
+    // Add footprint at new position
+    this.addFootprint(this.position);
+  }
+
+  /**
+   * Add a footprint at the given position
+   */
+  private addFootprint(position: Vector2): void {
+    const key = `${position.x},${position.y}`;
+    const now = performance.now();
+    
+    // Add or refresh footprint at this position
+    this.footprints.set(key, {
+      position: position.copy(),
+      timestamp: now,
+      intensity: this.FOOTPRINT_MAX_INTENSITY
+    });
+  }
+
+  /**
+   * Update footprints - fade them over time and remove old ones
+   */
+  updateFootprints(deltaTime: number): void {
+    const now = performance.now();
+    const toRemove: string[] = [];
+    
+    for (const [key, footprint] of this.footprints.entries()) {
+      const age = now - footprint.timestamp;
+      
+      if (age >= this.FOOTPRINT_FADE_TIME) {
+        // Remove completely faded footprints
+        toRemove.push(key);
+      } else {
+        // Smooth cosine fade - very gradual from full brightness to zero
+        const fadeProgress = age / this.FOOTPRINT_FADE_TIME;
+        
+        // Cosine fade: starts at 1, smoothly goes to 0
+        const fadeMultiplier = (Math.cos(fadeProgress * Math.PI) + 1) / 2;
+        footprint.intensity = this.FOOTPRINT_MAX_INTENSITY * fadeMultiplier;
+      }
+    }
+    
+    // Remove old footprints
+    for (const key of toRemove) {
+      this.footprints.delete(key);
     }
   }
 
@@ -126,7 +181,7 @@ export class Player {
 
   /**
    * Get the light intensity at a position (0 to 1)
-   * Combines directional flashlight with ambient player light
+   * Combines directional flashlight, ambient light, and footprint light
    */
   getLightIntensity(position: Vector2): number {
     // Get directional flashlight intensity
@@ -135,8 +190,45 @@ export class Player {
     // Get ambient light around player
     const ambientIntensity = this.getAmbientLightIntensity(position);
     
-    // Combine both light sources (take the maximum)
-    return Math.max(flashlightIntensity, ambientIntensity);
+    // Get footprint light intensity
+    const footprintIntensity = this.getFootprintLightIntensity(position);
+    
+    // Combine all light sources (take the maximum)
+    return Math.max(flashlightIntensity, ambientIntensity, footprintIntensity);
+  }
+
+  /**
+   * Get light intensity from footprints at a position
+   */
+  private getFootprintLightIntensity(position: Vector2): number {
+    const key = `${position.x},${position.y}`;
+    const footprint = this.footprints.get(key);
+    
+    if (!footprint) {
+      return 0;
+    }
+    
+    // Return the current intensity of the footprint
+    return footprint.intensity;
+  }
+
+  /**
+   * Get all current footprints for rendering
+   */
+  getFootprints(): Array<{ position: Vector2, intensity: number }> {
+    return Array.from(this.footprints.values()).map(fp => ({
+      position: fp.position.copy(),
+      intensity: fp.intensity
+    }));
+  }
+
+  /**
+   * Clear all footprints (for game reset)
+   */
+  clearFootprints(): void {
+    this.footprints.clear();
+    // Add initial footprint at current position
+    this.addFootprint(this.position);
   }
 
   /**

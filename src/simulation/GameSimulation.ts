@@ -50,6 +50,9 @@ export class GameSimulation {
       return;
     }
 
+    // Update player footprints
+    this.player.updateFootprints(deltaTime);
+
     // Update monster AI
     const playerLightIntensity = this.player.getLightIntensity(this.player.position);
     this.monster.update(deltaTime, this.player.position, playerLightIntensity);
@@ -188,6 +191,7 @@ export class GameSimulation {
   reset(): void {
     this.player.setPosition(this.maze.startPosition);
     this.player.setFlashlightDirection(new Vector2(0, -1)); // Face up
+    this.player.clearFootprints(); // Clear old footprints
     
     // Reset monster to a new random position
     const newMonsterPos = this.findMonsterStartPosition();
@@ -234,7 +238,8 @@ export class GameSimulation {
       // Normal mode: only show illuminated cells
       for (const cell of this.maze.getAllCells()) {
         const intensity = this.player.getLightIntensity(cell.position);
-        if (intensity > 0) {
+        // Include very dim footprints - use a tiny threshold instead of > 0
+        if (intensity > 0.001) { // Changed from > 0 to > 0.001 to include fading footprints
           visibleCells.push({ cell, intensity });
         }
       }
