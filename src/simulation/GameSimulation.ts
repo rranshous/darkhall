@@ -66,7 +66,7 @@ export class GameSimulation {
   }
 
   /**
-   * Find a good starting position for the monster (far from player, accessible)
+   * Find a good starting position for the monster (far from player, accessible, doesn't block critical paths)
    */
   private findMonsterStartPosition(): Vector2 {
     const floorCells = this.maze.getAllCells().filter(cell => 
@@ -80,18 +80,66 @@ export class GameSimulation {
       return new Vector2(this.maze.width - 3, this.maze.height - 3);
     }
     
-    // Find a floor cell reasonably far from start but not at the prize
+    // Find cells that are far from start and don't block critical paths
     const validCells = floorCells.filter(cell => {
       const distanceFromStart = this.maze.startPosition.distanceTo(cell.position);
-      return distanceFromStart >= 5; // At least 5 units away from player start
+      const distanceFromPrize = this.maze.prizePosition.distanceTo(cell.position);
+      
+      // Must be reasonably far from both start and prize
+      return distanceFromStart >= 5 && distanceFromPrize >= 3;
     });
     
-    if (validCells.length === 0) {
+    // Additional filter: ensure monster placement doesn't create no-win scenarios
+    const safeCells = validCells.filter(cell => {
+      return this.isMonsterPositionSafe(cell.position);
+    });
+    
+    // Use safe cells if available, otherwise fall back to valid cells
+    const candidateCells = safeCells.length > 0 ? safeCells : validCells;
+    
+    if (candidateCells.length === 0) {
       return floorCells[Math.floor(Math.random() * floorCells.length)].position;
     }
     
-    // Pick a random cell from the valid ones
-    return validCells[Math.floor(Math.random() * validCells.length)].position;
+    // Pick a random cell from the candidates
+    return candidateCells[Math.floor(Math.random() * candidateCells.length)].position;
+  }
+
+  /**
+   * Check if placing monster at this position would create a no-win scenario
+   */
+  private isMonsterPositionSafe(monsterPos: Vector2): boolean {
+    // Temporarily place monster and check if multiple paths still exist
+    // This is a simplified check - we ensure the monster isn't in a narrow corridor
+    // that would force the player into a dead end
+    
+    const adjacentFloors = this.maze.getAdjacentPositions(monsterPos)
+      .filter(pos => this.maze.isWalkable(pos)).length;
+    
+    // If monster is in a corridor with only 2 exits, it might block the player
+    // Prefer positions with 3+ adjacent floors (intersections, open areas)
+    if (adjacentFloors <= 2) {
+      // Additional check: is this position on the main path?
+      return !this.isOnMainPath(monsterPos);
+    }
+    
+    return true; // Safe position
+  }
+
+  /**
+   * Simple check if position is likely on a main path between start and prize
+   */
+  private isOnMainPath(position: Vector2): boolean {
+    // Calculate if this position is roughly on the direct line between start and prize
+    const startToPrize = this.maze.prizePosition.subtract(this.maze.startPosition);
+    const startToPos = position.subtract(this.maze.startPosition);
+    
+    // If the position is roughly in the direction from start to prize, it might be on main path
+    const dotProduct = startToPrize.normalize().x * startToPos.normalize().x + 
+                      startToPrize.normalize().y * startToPos.normalize().y;
+    
+    // If dot product > 0.7, it's roughly in the same direction (likely main path)
+    return dotProduct > 0.7;
   }
 
   /**

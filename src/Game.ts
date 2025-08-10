@@ -16,8 +16,8 @@ export class Game {
   private readonly MOVE_DELAY = 200; // Milliseconds between moves
 
   constructor(canvas: HTMLCanvasElement) {
-    // Initialize core systems
-    this.simulation = new GameSimulation(21, 21); // 21x21 maze
+    // Initialize core systems - larger maze with more paths
+    this.simulation = new GameSimulation(31, 31); // Increased from 21x21 to 31x31
     this.renderer = new GameRenderer(canvas);
     this.inputHandler = new InputHandler(canvas);
     

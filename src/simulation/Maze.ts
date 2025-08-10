@@ -138,18 +138,49 @@ export class Maze {
   }
 
   /**
-   * Add some random connections to make the maze more interesting
+   * Add many more random connections to create multiple paths and reduce choke points
    */
   private addRandomConnections(): void {
-    const connectionCount = Math.floor((this.width * this.height) / 100);
+    // Significantly increase connections - more paths means less likely to trap player
+    const connectionCount = Math.floor((this.width * this.height) / 25); // Increased from /100 to /25
     
     for (let i = 0; i < connectionCount; i++) {
       const x = Math.floor(Math.random() * (this.width - 2)) + 1;
       const y = Math.floor(Math.random() * (this.height - 2)) + 1;
       
-      // Only create connections that don't break the maze structure too much
+      // More liberal connection creation for better connectivity
       if (this.shouldCreateConnection(new Vector2(x, y))) {
         this.setCellType(new Vector2(x, y), CellType.FLOOR);
+      }
+    }
+    
+    // Add additional strategic connections to ensure path diversity
+    this.addStrategicConnections();
+  }
+
+  /**
+   * Add strategic connections to ensure multiple paths between key areas
+   */
+  private addStrategicConnections(): void {
+    const attempts = Math.floor((this.width * this.height) / 40);
+    
+    for (let i = 0; i < attempts; i++) {
+      const x = Math.floor(Math.random() * (this.width - 2)) + 1;
+      const y = Math.floor(Math.random() * (this.height - 2)) + 1;
+      const pos = new Vector2(x, y);
+      
+      // Create connections in walls that would bridge separate areas
+      if (this.getCell(pos)?.type === CellType.WALL) {
+        const adjacentFloors = this.getAdjacentPositions(pos)
+          .filter(adjPos => {
+            const cell = this.getCell(adjPos);
+            return cell && cell.type === CellType.FLOOR;
+          }).length;
+        
+        // If this wall has floors on opposite sides, it's a good candidate for connection
+        if (adjacentFloors >= 2) {
+          this.setCellType(pos, CellType.FLOOR);
+        }
       }
     }
   }
