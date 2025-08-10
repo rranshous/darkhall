@@ -104,17 +104,10 @@ export class GameRenderer {
       this.ctx.fillStyle = color;
       this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
       
-      // Add some border for walls - improved visibility
+      // Add borders only for walls to define structure better in light
       if (cell.type === CellType.WALL) {
-        this.ctx.strokeStyle = this.applyLightIntensity('#777777', intensity); // Lighter border
+        this.ctx.strokeStyle = this.applyLightIntensity('#777777', intensity);
         this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(x, y, this.cellSize, this.cellSize);
-      }
-      
-      // Add subtle borders for floors to help with navigation
-      if (cell.type === CellType.FLOOR && intensity > 0.3) {
-        this.ctx.strokeStyle = this.applyLightIntensity('#999999', intensity * 0.5);
-        this.ctx.lineWidth = 0.5;
         this.ctx.strokeRect(x, y, this.cellSize, this.cellSize);
       }
     }

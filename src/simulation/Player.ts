@@ -126,8 +126,23 @@ export class Player {
 
   /**
    * Get the light intensity at a position (0 to 1)
+   * Combines directional flashlight with ambient player light
    */
   getLightIntensity(position: Vector2): number {
+    // Get directional flashlight intensity
+    const flashlightIntensity = this.getFlashlightIntensity(position);
+    
+    // Get ambient light around player
+    const ambientIntensity = this.getAmbientLightIntensity(position);
+    
+    // Combine both light sources (take the maximum)
+    return Math.max(flashlightIntensity, ambientIntensity);
+  }
+
+  /**
+   * Get directional flashlight intensity (original logic)
+   */
+  private getFlashlightIntensity(position: Vector2): number {
     if (!this.isPositionIlluminated(position)) {
       return 0;
     }
@@ -147,5 +162,28 @@ export class Player {
     const angleIntensity = Math.max(0, 1 - (angle / maxAngle));
     
     return distanceIntensity * angleIntensity;
+  }
+
+  /**
+   * Get ambient light intensity around the player (like flashlight bleedoff/reflection)
+   */
+  private getAmbientLightIntensity(position: Vector2): number {
+    const distance = this.position.distanceTo(position);
+    const ambientRange = 1.5; // Smaller radius than flashlight
+    const maxAmbientIntensity = 0.25; // Dimmer than flashlight
+    
+    // Only provide ambient light if within range
+    if (distance > ambientRange) {
+      return 0;
+    }
+    
+    // Check line of sight for ambient light too (light doesn't go through walls)
+    if (!this.hasLineOfSight(this.position, position)) {
+      return 0;
+    }
+    
+    // Smooth falloff for ambient light
+    const falloff = 1 - (distance / ambientRange);
+    return maxAmbientIntensity * falloff * falloff; // Quadratic falloff for softer effect
   }
 }
