@@ -3,8 +3,10 @@
 # Dark Hall - Itch.io Build Script
 echo "🎮 Building Dark Hall for itch.io deployment..."
 
-# Clean previous build
+# Clean previous builds and zip files
+echo "🧹 Cleaning previous builds..."
 rm -rf build/
+rm -f *.zip darkhall*.zip
 mkdir -p build/
 
 # Copy main files
