@@ -79,23 +79,23 @@ export class GameRenderer {
       const x = cell.position.x * this.cellSize;
       const y = cell.position.y * this.cellSize;
       
-      // Base color depends on cell type
+      // Base color depends on cell type - improved colors for better visibility
       let baseColor: string;
       switch (cell.type) {
         case CellType.WALL:
-          baseColor = '#444444';
+          baseColor = '#555555'; // Lighter gray for better wall definition
           break;
         case CellType.FLOOR:
-          baseColor = '#888888';
+          baseColor = '#AAAAAA'; // Much lighter floor for better navigation
           break;
         case CellType.START:
-          baseColor = '#44AA44';
+          baseColor = '#55DD55'; // Brighter green for start
           break;
         case CellType.PRIZE:
-          baseColor = '#FFDD44';
+          baseColor = '#FFFF55'; // Brighter yellow for prize
           break;
         default:
-          baseColor = '#666666';
+          baseColor = '#888888'; // Lighter default
       }
       
       // Apply light intensity to the color
@@ -104,10 +104,17 @@ export class GameRenderer {
       this.ctx.fillStyle = color;
       this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
       
-      // Add some border for walls
+      // Add some border for walls - improved visibility
       if (cell.type === CellType.WALL) {
-        this.ctx.strokeStyle = this.applyLightIntensity('#666666', intensity);
+        this.ctx.strokeStyle = this.applyLightIntensity('#777777', intensity); // Lighter border
         this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(x, y, this.cellSize, this.cellSize);
+      }
+      
+      // Add subtle borders for floors to help with navigation
+      if (cell.type === CellType.FLOOR && intensity > 0.3) {
+        this.ctx.strokeStyle = this.applyLightIntensity('#999999', intensity * 0.5);
+        this.ctx.lineWidth = 0.5;
         this.ctx.strokeRect(x, y, this.cellSize, this.cellSize);
       }
     }
@@ -271,14 +278,28 @@ export class GameRenderer {
   }
 
   /**
-   * Apply light intensity to a color
+   * Apply light intensity to a color with improved visibility
    */
   private applyLightIntensity(baseColor: string, intensity: number): string {
-    // Simple implementation: multiply RGB values by intensity
     const hex = baseColor.replace('#', '');
-    const r = Math.floor(parseInt(hex.substr(0, 2), 16) * intensity);
-    const g = Math.floor(parseInt(hex.substr(2, 2), 16) * intensity);
-    const b = Math.floor(parseInt(hex.substr(4, 2), 16) * intensity);
+    const baseR = parseInt(hex.substr(0, 2), 16);
+    const baseG = parseInt(hex.substr(2, 2), 16);
+    const baseB = parseInt(hex.substr(4, 2), 16);
+    
+    // Improved lighting model: ensures minimum visibility and better contrast
+    const minBrightness = 0.15; // Minimum visibility even at lowest intensity
+    const maxBrightness = 0.9;   // Maximum brightness to preserve atmosphere
+    
+    // Scale intensity to a more useful range
+    const scaledIntensity = minBrightness + (intensity * (maxBrightness - minBrightness));
+    
+    // Apply intensity with gamma correction for better visual perception
+    const gamma = 0.8; // Slightly brighter perception
+    const correctedIntensity = Math.pow(scaledIntensity, gamma);
+    
+    const r = Math.floor(baseR * correctedIntensity);
+    const g = Math.floor(baseG * correctedIntensity);
+    const b = Math.floor(baseB * correctedIntensity);
     
     return `rgb(${r}, ${g}, ${b})`;
   }

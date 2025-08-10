@@ -23,6 +23,9 @@ export class GameSimulation {
     // Create player at start position
     this.player = new Player(this.maze.startPosition);
     
+    // Give player maze reference for line-of-sight calculations
+    this.player.setMaze(this.maze);
+    
     // Create monster at a position far from player
     const monsterStartPos = this.findMonsterStartPosition();
     this.monster = new Monster(monsterStartPos, this.maze, 1200); // Slow movement (1.2 seconds per move)

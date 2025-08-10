@@ -1,4 +1,5 @@
 import { Vector2 } from '../core/Vector2.js';
+import { Maze } from './Maze.js';
 
 /**
  * Player character with position and flashlight
@@ -9,6 +10,7 @@ export class Player {
   public flashlightDirection: Vector2; // Direction flashlight is pointing
   public flashlightRange: number;
   public flashlightAngle: number; // Cone angle in radians
+  private maze: Maze | null = null; // Reference to maze for line-of-sight
 
   constructor(startPosition: Vector2) {
     this.position = startPosition.copy();
@@ -16,6 +18,13 @@ export class Player {
     this.flashlightDirection = this.facing.copy();
     this.flashlightRange = 4; // How far the flashlight reaches
     this.flashlightAngle = Math.PI / 3; // 60 degrees cone
+  }
+
+  /**
+   * Set maze reference for line-of-sight calculations
+   */
+  setMaze(maze: Maze): void {
+    this.maze = maze;
   }
 
   /**
@@ -76,7 +85,43 @@ export class Player {
     
     const angle = Math.acos(Math.max(-1, Math.min(1, dotProduct)));
     
-    return angle <= this.flashlightAngle / 2;
+    if (angle > this.flashlightAngle / 2) {
+      return false;
+    }
+
+    // Check line of sight - light blocked by walls
+    return this.hasLineOfSight(this.position, position);
+  }
+
+  /**
+   * Check if there's an unobstructed line of sight between two positions
+   */
+  private hasLineOfSight(from: Vector2, to: Vector2): boolean {
+    if (!this.maze) {
+      return true; // No maze reference, assume clear
+    }
+
+    // Use DDA (Digital Differential Analyzer) algorithm for line traversal
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Number of steps to check (higher = more accurate)
+    const steps = Math.ceil(distance * 2);
+    
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const checkX = Math.floor(from.x + dx * t);
+      const checkY = Math.floor(from.y + dy * t);
+      const checkPos = new Vector2(checkX, checkY);
+      
+      // If we hit a wall, line of sight is blocked
+      if (!this.maze.isWalkable(checkPos)) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   /**
